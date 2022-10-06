@@ -61,11 +61,11 @@ public class MainMovies {
         Map<String, BigDecimal> sortedMoviesByRating = sortByValue(moviesDataMap);
 
         // Creating list of sorted movie names
-        List<String> sortedMovieNames = new ArrayList<>(sortedMoviesByRating.keySet());
+        LinkedList<String> sortedMovieNames = new LinkedList<>(sortedMoviesByRating.keySet());
 
-        System.out.println("Best Movie: " + sortedMovieNames.get(sortedMovieNames.size() - 1));
+        System.out.println("Best Movie: " + sortedMovieNames.getLast());
 
-        System.out.println("Worst Movie: " + sortedMovieNames.get(0));
+        System.out.println("Worst Movie: " + sortedMovieNames.getFirst());
     }
 }
 
