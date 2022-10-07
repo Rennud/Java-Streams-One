@@ -1,71 +1,57 @@
 package org.example;
 
+import org.example.pojo.Movie;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 public class MainMovies {
-
-    public static Map<String, BigDecimal> sortByValue(HashMap<String, BigDecimal> hm) {
-        return hm.entrySet()
-                .stream()
-                .sorted(Map.Entry.comparingByValue())
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (e1, e2) -> e1, LinkedHashMap::new));
-    }
-
     public static void main(String[] args) throws IOException {
-        // CSV content - List
-        List<String> moviesData = Files
+        // Creating list of movie obj.
+        List<Movie> moviesData = Files
                 .readAllLines(Paths.get("movies.csv"))
                 .stream()
                 .skip(1)
+                .map(l -> l.split(","))
+                .map(x -> Movie.builder()
+                        .movieName(x[0])
+                        .rating(new BigDecimal(x[1]))
+                        .build())
                 .toList();
 
-        // List of movies
-        List<String> movies = moviesData
+        // List of movie names
+        List<String> movieNames = moviesData
                 .stream()
-                .map(l -> l.split(",")[0])
+                .map(Movie::getMovieName)
                 .toList();
-        System.out.println(movies);
+        System.out.println(movieNames);
 
-        // List of ratings => BigDecimal
-        List<BigDecimal> ratings = moviesData
+        // Sum of ratings
+        Optional<BigDecimal> ratingSum = moviesData
                 .stream()
-                .map(l -> l.split(",")[1])
-                .map(BigDecimal::new)
-                .toList();
+                .map(Movie::getRating)
+                .reduce(BigDecimal::add);
 
-        // Calculating average rating
-        Optional<BigDecimal> ratingSum = ratings
+        // Dunno... ASK
+        Optional<Object> avgRating = ratingSum
+                .map(e -> e.divide(BigDecimal.valueOf(moviesData.size()), RoundingMode.HALF_UP));
+        avgRating.ifPresent(System.out::println);
+
+        Optional<Movie> bestMovie = moviesData
                 .stream()
-                .reduce(BigDecimal::add)
-                .map(e -> e.divide(BigDecimal.valueOf(ratings.size()), RoundingMode.HALF_UP));
-        ratingSum.ifPresent(System.out::println);
+                .max(Comparator.comparing(Movie::getRating));
+        bestMovie.ifPresent(System.out::println);
 
-        // Creating HashMap from created lists key = movie name, value = movie rating
-        HashMap<String, BigDecimal> moviesDataMap = IntStream.range(0, movies.size())
-                .collect(HashMap::new,
-                        (m, i) -> m.put(movies.get(i), ratings.get(i)),
-                        Map::putAll
-                );
-
-        // Sorting by value --> rating
-        Map<String, BigDecimal> sortedMoviesByRating = sortByValue(moviesDataMap);
-
-        // Creating list of sorted movie names
-        LinkedList<String> sortedMovieNames = new LinkedList<>(sortedMoviesByRating.keySet());
-
-        System.out.println("Best Movie: " + sortedMovieNames.getLast());
-
-        System.out.println("Worst Movie: " + sortedMovieNames.getFirst());
+        Optional<Movie> worstMovie = moviesData
+                .stream()
+                .max(Comparator.comparing(Movie::getRating));
+        worstMovie.ifPresent(System.out::println);
     }
 }
 
